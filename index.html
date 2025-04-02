@@ -29,7 +29,6 @@
             width: 100%;
             display: flex;
             justify-content: flex-end;
-            /* Removed pointer-events: none; so buttons work */
         }
 
         .control-group {
@@ -69,7 +68,7 @@
 <body>
 
 <div id="c2canvasdiv">
-    <canvas height="576" id="c2canvas" width="800"></canvas>
+    <canvas height="576" id="c2canvas" width="800" tabindex="0"></canvas>
 </div>
 
 <!-- Touch Controls -->
@@ -91,6 +90,9 @@
         cr_createRuntime("c2canvas");
     });
 
+    // Ensure the canvas element is focused to capture key events
+    document.getElementById('c2canvas').focus();
+
     // Pause and resume on page becoming visible/invisible
     function onVisibilityChanged() {
         if (document.hidden || document.mozHidden || document.webkitHidden || document.msHidden) 
@@ -106,6 +108,7 @@
 
     // Simulate Key Press Events for Touch Controls
     function simulateKeyEvent(key, type) {
+        console.log("Simulated Event:", key, type);  // Debugging line
         let event = new KeyboardEvent(type, {
             bubbles: true,
             cancelable: true,
