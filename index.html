@@ -20,8 +20,8 @@
             overflow: hidden;
             touch-action: none;
         }
-        canvas { touch-action-delay: none; touch-action: none; }
-        
+        canvas { touch-action: none; }
+
         /* Touch Controls */
         #touch-controls {
             position: fixed;
@@ -29,7 +29,7 @@
             width: 100%;
             display: flex;
             justify-content: flex-end;
-            pointer-events: none;
+            /* Removed pointer-events: none; so buttons work */
         }
 
         .control-group {
@@ -38,7 +38,6 @@
             width: 160px;
             height: 160px;
             position: relative;
-            pointer-events: auto;
             margin-right: 20px;
         }
 
@@ -107,10 +106,13 @@
 
     // Simulate Key Press Events for Touch Controls
     function simulateKeyEvent(key, type) {
-        document.dispatchEvent(new KeyboardEvent(type, { key: key, code: key, bubbles: true }));
+        let event = new Event(type, { bubbles: true });
+        event.key = key;
+        event.code = key;
+        document.dispatchEvent(event);
     }
 
-    // Add Touch Event Listeners for Controls
+    // Add Touch and Pointer Event Listeners for Controls
     document.querySelectorAll('.btn').forEach(button => {
         let key = button.getAttribute('data-key');
 
@@ -123,8 +125,17 @@
             e.preventDefault();
             simulateKeyEvent(key, "keyup");
         });
+
+        button.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            simulateKeyEvent(key, "keydown");
+        });
+
+        button.addEventListener('pointerup', (e) => {
+            e.preventDefault();
+            simulateKeyEvent(key, "keyup");
+        });
     });
 </script>
 
-</body>
-</html>
+</body
