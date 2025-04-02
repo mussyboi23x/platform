@@ -108,13 +108,13 @@
 
     // Simulate Key Press Events for Touch Controls
     function simulateKeyEvent(key, type) {
-        console.log("Simulated Event:", key, type);  // Debugging line
+        // Create a new KeyboardEvent for keydown or keyup
         let event = new KeyboardEvent(type, {
-            bubbles: true,
-            cancelable: true,
-            key: key,
-            code: key,
-            keyCode: key === "ArrowUp" ? 38 : (key === "ArrowDown" ? 40 : (key === "ArrowLeft" ? 37 : 39))
+            bubbles: true, // Event bubbles up in the DOM
+            cancelable: true, // Event can be canceled
+            key: key,        // Set the key value (e.g., ArrowUp)
+            code: key,       // Set the physical key code (matches the key)
+            keyCode: (key === "ArrowUp" ? 38 : (key === "ArrowDown" ? 40 : (key === "ArrowLeft" ? 37 : 39))),
         });
         document.dispatchEvent(event);
     }
