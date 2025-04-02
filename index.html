@@ -11,55 +11,126 @@
     <meta content="black" name="apple-mobile-web-app-status-bar-style"/>
     <meta content="true" name="HandheldFriendly"/>
     <meta content="yes" name="mobile-web-app-capable"/>
-    
+
     <style>
-        * { padding: 0; margin: 0; }
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box; /* Include padding and border in element's total width and height */
+        }
+
         html, body {
             background: #000;
             color: #fff;
             overflow: hidden;
-            touch-action: none;
+            touch-action: none; /* Prevents default touch behaviors like scrolling */
+            height: 100%; /* Ensure full viewport height */
         }
-        canvas { touch-action: none; }
+
+        body {
+            display: flex; /* Use flexbox for centering */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #c2canvasdiv {
+            /* width and height will be set by Construct 2, but ensure it scales */
+            /* max-width: 100%;  Remove fixed max-width, allow scaling */
+            /* max-height: 100%; */
+            position: relative; /* Needed for absolute positioning of controls */
+        }
+
+        canvas {
+            touch-action: none;
+            display: block; /* Removes extra space below canvas */
+            width: 100%; /* Make canvas scale to parent */
+            height: 100%;
+        }
 
         /* Touch Controls */
         #touch-controls {
-            position: fixed;
-            bottom: 10px;
-            width: 100%;
+            position: fixed; /* Anchor controls to a position relative to viewport */
+            bottom: 20px; /* More space from bottom */
+            left: 50%;
+            transform: translateX(-50%); /* Center horizontally */
             display: flex;
-            justify-content: flex-end;
+            /* justify-content: center; */ /* Center the control groups */
+            gap: 20px; /* Space between control groups */
+            z-index: 1000; /* Ensure controls are above canvas */
         }
 
         .control-group {
             display: flex;
             flex-wrap: wrap;
-            width: 160px;
-            height: 160px;
+            width: 100px; /* Adjusted size */
+            height: 100px;
             position: relative;
-            margin-right: 20px;
+            /* margin-right: 20px; */ /* Removed, using gap on parent */
         }
 
         .btn {
-            width: 60px;
-            height: 60px;
+            width: 40px; /* Adjusted size */
+            height: 40px;
             background: rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 20px;
+            font-size: 16px; /* Adjusted font size */
             color: white;
             font-weight: bold;
             position: absolute;
             touch-action: manipulation;
+            cursor: pointer; /* Add cursor for better UX */
+            border: 2px solid rgba(255, 255, 255, 0.5); /* Add a border */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Add a shadow */
+            transition: background-color 0.2s, transform 0.1s; /* Smooth transition */
+        }
+
+        .btn:active {
+            background-color: rgba(255, 255, 255, 0.5); /* Slightly brighter on press */
+            transform: scale(0.9); /* Slightly scale down on press */
         }
 
         /* Arrow Key Layout */
-        #up { left: 50px; top: 0; }
-        #down { left: 50px; bottom: 0; }
-        #left { left: 0; top: 50px; }
-        #right { right: 0; top: 50px; }
+        #up {
+            left: calc(50% - 20px); /* Center horizontally */
+            top: 0;
+        }
+
+        #down {
+            left: calc(50% - 20px);
+            bottom: 0;
+        }
+
+        #left {
+            left: 0;
+            top: calc(50% - 20px); /* Center vertically */
+        }
+
+        #right {
+            right: 0;
+            top: calc(50% - 20px);
+        }
+
+        /* For devices with smaller screens */
+        @media (max-width: 400px) {
+            .control-group {
+                width: 80px;
+                height: 80px;
+            }
+
+            .btn {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+
+            #touch-controls {
+                gap: 10px;
+            }
+        }
     </style>
 
     <link href="animate.css" rel="stylesheet" type="text/css"/>
@@ -71,7 +142,6 @@
     <canvas height="576" id="c2canvas" width="800" tabindex="0"></canvas>
 </div>
 
-<!-- Touch Controls -->
 <div id="touch-controls">
     <div class="control-group">
         <div id="up" class="btn" data-key="ArrowUp">↑</div>
@@ -79,7 +149,7 @@
         <div id="left" class="btn" data-key="ArrowLeft">←</div>
         <div id="right" class="btn" data-key="ArrowRight">→</div>
     </div>
-</div>
+    </div>
 
 <script src="jquery-2.1.1.min.js"></script>
 <script src="html2canvas.min.js"></script>
@@ -91,13 +161,14 @@
     });
 
     // Ensure the canvas element is focused to capture key events
-    document.getElementById('c2canvas').focus();
+    const canvas = document.getElementById('c2canvas');
+    canvas.focus();
 
     // Pause and resume on page becoming visible/invisible
     function onVisibilityChanged() {
-        if (document.hidden || document.mozHidden || document.webkitHidden || document.msHidden) 
+        if (document.hidden || document.mozHidden || document.webkitHidden || document.msHidden)
             cr_setSuspended(true);
-        else 
+        else
             cr_setSuspended(false);
     }
 
@@ -112,36 +183,51 @@
         let event = new KeyboardEvent(type, {
             bubbles: true, // Event bubbles up in the DOM
             cancelable: true, // Event can be canceled
-            key: key,        // Set the key value (e.g., ArrowUp)
+            key: key,         // Set the key value (e.g., ArrowUp)
             code: key,       // Set the physical key code (matches the key)
             keyCode: (key === "ArrowUp" ? 38 : (key === "ArrowDown" ? 40 : (key === "ArrowLeft" ? 37 : 39))),
         });
-        document.dispatchEvent(event);
+        canvas.dispatchEvent(event); // Dispatch event on the canvas
     }
 
     // Add Touch and Pointer Event Listeners for Controls
     document.querySelectorAll('.btn').forEach(button => {
         let key = button.getAttribute('data-key');
+        let isPressed = false; // Track button state
 
-        button.addEventListener('touchstart', (e) => {
+        const handleStart = (e) => {
             e.preventDefault();
-            simulateKeyEvent(key, "keydown");
-        });
+            if (!isPressed) { // Only send keydown once
+                simulateKeyEvent(key, "keydown");
+                isPressed = true;
+                button.classList.add('active'); // Add active class
+            }
+        };
 
-        button.addEventListener('touchend', (e) => {
+        const handleEnd = (e) => {
             e.preventDefault();
-            simulateKeyEvent(key, "keyup");
-        });
+            if (isPressed) { // Only send keyup once
+                simulateKeyEvent(key, "keyup");
+                isPressed = false;
+                button.classList.remove('active'); // Remove active class
+            }
+        };
 
-        button.addEventListener('pointerdown', (e) => {
-            e.preventDefault();
-            simulateKeyEvent(key, "keydown");
-        });
+        button.addEventListener('touchstart', handleStart);
+        button.addEventListener('touchend', handleEnd);
+        button.addEventListener('pointerdown', handleStart);
+        button.addEventListener('pointerup', handleEnd);
+        button.addEventListener('pointerleave', handleEnd); // important!
 
-        button.addEventListener('pointerup', (e) => {
-            e.preventDefault();
-            simulateKeyEvent(key, "keyup");
-        });
+        // Add a class for active state
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .btn.active {
+                background-color: rgba(255, 255, 255, 0.7);
+                transform: scale(0.9);
+            }
+        `;
+        document.head.appendChild(style);
     });
 </script>
 
