@@ -4,8 +4,6 @@
     <meta charset="UTF-8"/>
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible"/>
     <title>Stickman Boost</title>
-    <link href="../../images/ico.ico" rel="shortcut icon">
-    <script src="../../storage/js/cloak.js"></script>
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui" name="viewport"/>
     <meta content="yes" name="apple-mobile-web-app-capable"/>
     <meta content="black" name="apple-mobile-web-app-status-bar-style"/>
@@ -20,8 +18,8 @@
             overflow: hidden;
             touch-action: none;
         }
-        canvas { touch-action: none; }
-
+        canvas { touch-action-delay: none; touch-action: none; }
+        
         /* Touch Controls */
         #touch-controls {
             position: fixed;
@@ -29,7 +27,7 @@
             width: 100%;
             display: flex;
             justify-content: flex-end;
-            /* Removed pointer-events: none; so buttons work */
+            pointer-events: none;
         }
 
         .control-group {
@@ -38,6 +36,7 @@
             width: 160px;
             height: 160px;
             position: relative;
+            pointer-events: auto;
             margin-right: 20px;
         }
 
@@ -62,9 +61,6 @@
         #left { left: 0; top: 50px; }
         #right { right: 0; top: 50px; }
     </style>
-
-    <link href="animate.css" rel="stylesheet" type="text/css"/>
-    <link href="hmmg_layoutTransition.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 
@@ -104,15 +100,24 @@
     document.addEventListener("webkitvisibilitychange", onVisibilityChanged, false);
     document.addEventListener("msvisibilitychange", onVisibilityChanged, false);
 
-    // Simulate Key Press Events for Touch Controls
+    // Simulate Key Press Events for Touch Controls (Solution 1 - Better Key Events)
     function simulateKeyEvent(key, type) {
-        let event = new Event(type, { bubbles: true });
-        event.key = key;
-        event.code = key;
-        document.dispatchEvent(event);
+        let event = new KeyboardEvent(type, {
+            key: key,
+            code: key,
+            bubbles: true,
+            cancelable: true
+        });
+
+        let canvas = document.getElementById("c2canvas");
+        if (canvas) {
+            canvas.dispatchEvent(event);
+        } else {
+            document.dispatchEvent(event);
+        }
     }
 
-    // Add Touch and Pointer Event Listeners for Controls
+    // Add Touch Event Listeners for Controls
     document.querySelectorAll('.btn').forEach(button => {
         let key = button.getAttribute('data-key');
 
@@ -125,17 +130,8 @@
             e.preventDefault();
             simulateKeyEvent(key, "keyup");
         });
-
-        button.addEventListener('pointerdown', (e) => {
-            e.preventDefault();
-            simulateKeyEvent(key, "keydown");
-        });
-
-        button.addEventListener('pointerup', (e) => {
-            e.preventDefault();
-            simulateKeyEvent(key, "keyup");
-        });
     });
 </script>
 
-</body
+</body>
+</html>
